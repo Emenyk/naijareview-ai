@@ -1,51 +1,173 @@
 @extends('layouts.app')
 
+@section('title', 'Task B — Recommendation')
+
 @section('content')
-    <div class="space-y-6">
-        <section class="bg-white border border-gray-200 rounded-3xl shadow-sm p-8">
-            <div class="flex flex-col gap-4">
+    @php
+        $selectedScenario = old('scenario', $scenario ?? 'normal');
+    @endphp
+
+    <div class="space-y-8">
+        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">Task B</span>
                 <div>
-                    <p class="text-sm uppercase tracking-[0.24em] text-emerald-700 font-semibold">Task B</p>
-                    <h1 class="mt-2 text-3xl font-semibold text-slate-900">Recommendation Engine</h1>
+                    <h1 class="text-3xl font-semibold text-slate-900">Recommendation Agent</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                        Describe a user and receive a ranked list of personalized recommendations. Refine the list in follow-up turns to simulate an AI assistant workflow.
+                    </p>
                 </div>
-                <p class="max-w-2xl text-gray-600 text-base leading-7">
-                    Generate focused recommendations based on user context and preference signals. This page introduces a reliable, professional workflow for delivering relevant suggestions.
-                </p>
+            </div>
+
+            <div class="mt-8 grid gap-4 md:grid-cols-3">
+                @foreach([
+                    'normal' => ['title' => 'Normal User', 'description' => 'Has review history', 'icon' => '👤'],
+                    'cold_start' => ['title' => 'Cold Start', 'description' => 'Brand new user, no history', 'icon' => '❄️'],
+                    'cross_domain' => ['title' => 'Cross Domain', 'description' => 'History in different category', 'icon' => '🔁'],
+                ] as $key => $scenarioCard)
+                    <button type="button" onclick="document.getElementById('scenario').value='{{ $key }}'" class="group flex flex-col gap-3 rounded-3xl border p-5 text-left transition focus:outline-none focus:ring-2 focus:ring-emerald-300 {{ $selectedScenario === $key ? 'border-emerald-500 bg-emerald-50 shadow-sm' : 'border-slate-200 bg-white hover:border-slate-300' }}">
+                        <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-lg">{{ $scenarioCard['icon'] }}</span>
+                        <div>
+                            <div class="flex items-center gap-2 text-base font-semibold text-slate-900">
+                                <span>{{ $scenarioCard['title'] }}</span>
+                                @if($selectedScenario === $key)
+                                    <span class="text-emerald-600">✓</span>
+                                @endif
+                            </div>
+                            <p class="mt-2 text-sm text-slate-500">{{ $scenarioCard['description'] }}</p>
+                        </div>
+                    </button>
+                @endforeach
             </div>
         </section>
 
-        <section class="grid gap-6 md:grid-cols-2">
-            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                <h2 class="text-xl font-semibold text-slate-900">What to do</h2>
-                <p class="mt-3 text-gray-600 leading-7">
-                    Use the task to create concise, relevant product or content recommendations based on a user identifier and optional preference notes.
-                </p>
-            </div>
+        <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Input</p>
+                        <h2 class="mt-3 text-2xl font-semibold text-slate-900">Describe the user</h2>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Persona prompt</span>
+                </div>
 
-            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                <h2 class="text-xl font-semibold text-slate-900">Why it matters</h2>
-                <p class="mt-3 text-gray-600 leading-7">
-                    High-quality recommendations increase engagement and help users find value faster, while preserving a simple, professional presentation.
-                </p>
-            </div>
-        </section>
+                <form action="{{ route('task-b.recommend') }}" method="POST" class="mt-6 space-y-6">
+                    @csrf
+                    <input type="hidden" name="scenario" id="scenario" value="{{ $selectedScenario }}">
 
-        <section class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-            <h2 class="text-xl font-semibold text-slate-900">Key details</h2>
-            <ul class="mt-4 space-y-3 text-gray-600">
-                <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span>Designed for user-centric recommendation flows.</span>
-                </li>
-                <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span>Supports explicit preference input and user context.</span>
-                </li>
-                <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span>Consistent layout with Task A for a unified app experience.</span>
-                </li>
-            </ul>
-        </section>
+                    <div class="space-y-2">
+                        <label for="persona_description" class="block text-sm font-medium text-slate-700">Describe the User Persona</label>
+                        <textarea id="persona_description" name="persona_description" rows="5" placeholder="e.g. Chidi, 28, Lagos. Loves spicy local food, always complains about overpricing. Recently reviewed 3 restaurants. Wants something new to try tonight." class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-4 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100"></textarea>
+                    </div>
+
+                    <div class="grid gap-4 lg:grid-cols-2">
+                        <div class="space-y-2">
+                            <label for="domain" class="block text-sm font-medium text-slate-700">Domain / Category</label>
+                            <input id="domain" name="domain" type="text" placeholder="e.g. Restaurants, Books, Movies" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+                        </div>
+                        <div class="space-y-2">
+                            <label for="location" class="block text-sm font-medium text-slate-700">Location Context</label>
+                            <input id="location" name="location" type="text" placeholder="e.g. Lagos, Abuja, Port Harcourt" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full rounded-3xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        Get Recommendations
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                @if($recommendations ?? null)
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Results</p>
+                                <h2 class="mt-3 text-2xl font-semibold text-slate-900">Top 10 Recommendations</h2>
+                            </div>
+                            <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Ranked list</span>
+                        </div>
+
+                        <div class="space-y-4">
+                            @foreach($recommendations as $index => $item)
+                                @php
+                                    $rank = $index + 1;
+                                    if ($rank === 1) {
+                                        $borderClass = 'border-amber-400 bg-amber-50';
+                                        $dotClass = 'text-amber-700';
+                                    } elseif ($rank === 2) {
+                                        $borderClass = 'border-slate-400 bg-slate-100';
+                                        $dotClass = 'text-slate-700';
+                                    } elseif ($rank === 3) {
+                                        $borderClass = 'border-orange-400 bg-orange-50';
+                                        $dotClass = 'text-orange-700';
+                                    } else {
+                                        $borderClass = 'border-slate-200 bg-slate-50';
+                                        $dotClass = 'text-slate-500';
+                                    }
+                                @endphp
+
+                                <div class="flex gap-4 rounded-3xl border-l-4 px-5 py-4 {{ $borderClass }}">
+                                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-white text-sm font-semibold shadow-sm {{ $dotClass }}">
+                                        {{ $rank }}
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-900">{{ $item['name'] ?? 'Recommendation ' . $rank }}</p>
+                                        <p class="mt-2 text-sm leading-6 text-slate-600">{{ $item['reason'] ?? 'No reason provided.' }}</p>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <div class="flex min-h-[280px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                        Your top recommendations will appear here after the first request.
+                    </div>
+                @endif
+            </section>
+        </div>
+
+        @if($recommendations ?? null)
+            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Refinement</p>
+                        <h2 class="mt-3 text-2xl font-semibold text-slate-900">Refine These Recommendations</h2>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Multi-turn</span>
+                </div>
+
+                @if(!empty($history))
+                    <div class="mt-6 space-y-4">
+                        @foreach($history as $message)
+                            @if(($message['role'] ?? '') === 'user')
+                                <div class="flex justify-end">
+                                    <div class="max-w-xl rounded-3xl bg-slate-100 px-4 py-3 text-sm text-slate-700 shadow-sm">
+                                        {{ $message['message'] ?? '' }}
+                                    </div>
+                                </div>
+                            @else
+                                <div class="flex justify-start">
+                                    <div class="max-w-xl rounded-3xl bg-emerald-50 px-4 py-3 text-sm text-slate-700 shadow-sm border border-emerald-100">
+                                        {{ $message['message'] ?? '' }}
+                                    </div>
+                                </div>
+                            @endif
+                        @endforeach
+                    </div>
+                @endif
+
+                <form action="{{ route('task-b.refine') }}" method="POST" class="mt-6 space-y-4">
+                    @csrf
+                    <div class="space-y-2">
+                        <label for="refinement" class="block text-sm font-medium text-slate-700">Refinement prompt</label>
+                        <input id="refinement" name="refinement" type="text" placeholder="e.g. Remove expensive options, show me Nigerian content only, something calmer" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-100" />
+                    </div>
+                    <button type="submit" class="w-full rounded-3xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500">
+                        Refine List
+                    </button>
+                </form>
+            </section>
+        @endif
     </div>
 @endsection

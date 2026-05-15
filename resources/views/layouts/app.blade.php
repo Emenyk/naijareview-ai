@@ -1,36 +1,71 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NaijaReview AI — DSN x BCT Hackathon</title>
+    <title>@yield('title', 'NaijaReview AI') — DSN x BCT LLM Agent Challenge</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-50 text-slate-900">
-    <header class="bg-white border-b border-slate-200">
-        <div class="max-w-6xl mx-auto flex flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">
-            <div>
-                <a href="{{ url('/') }}" class="inline-flex items-center gap-3 text-slate-900">
-                    <span class="text-2xl font-semibold">NaijaReview AI</span>
-                </a>
-                <p class="mt-2 max-w-2xl text-sm text-slate-500">
-                    A clean, professional interface for Task A and Task B workflows in the DSN x BCT Hackathon.
-                </p>
+<body class="min-h-screen bg-slate-50 text-slate-900">
+    <div class="min-h-screen flex flex-col">
+        <header id="app-header" class="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur-md transition-all duration-300">
+            <div class="max-w-6xl mx-auto flex flex-col gap-3 px-6 py-5 transition-all duration-300 md:flex-row md:items-center md:justify-between">
+                <div>
+                    <p class="text-3xl font-semibold tracking-tight text-slate-900">NaijaReview AI</p>
+                    <p id="app-header-subtitle" class="mt-1 text-sm text-slate-500 transition-opacity duration-300">DSN x BCT LLM Agent Challenge 3.0</p>
+                </div>
+
+                <nav class="flex items-center gap-6" aria-label="Primary navigation">
+                    <a href="{{ route('task-a') }}" class="text-sm font-semibold text-slate-700 transition hover:text-slate-900 pb-1 {{ request()->routeIs('task-a') ? 'border-b-2 border-emerald-600 text-slate-900' : '' }}">
+                        User Modeling
+                    </a>
+                    <a href="{{ route('task-b') }}" class="text-sm font-semibold text-slate-700 transition hover:text-slate-900 pb-1 {{ request()->routeIs('task-b') ? 'border-b-2 border-emerald-600 text-slate-900' : '' }}">
+                        Recommendation
+                    </a>
+                </nav>
             </div>
+        </header>
 
-            <nav class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('task-a') }}" class="rounded-full px-4 py-2 text-sm font-semibold transition shadow-sm {{ request()->routeIs('task-a') ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                    Task A
-                </a>
-                <a href="{{ route('task-b') }}" class="rounded-full px-4 py-2 text-sm font-semibold transition shadow-sm {{ request()->routeIs('task-b') ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200' }}">
-                    Task B
-                </a>
-            </nav>
-        </div>
-    </header>
+        <main class="flex-1 bg-slate-50 px-4 py-10">
+            <div class="mx-auto w-full max-w-5xl rounded-3xl bg-white px-6 py-8 shadow-sm ring-1 ring-slate-200/80">
+                @yield('content')
+            </div>
+        </main>
 
-    <main class="max-w-5xl mx-auto py-10 px-4">
-        @yield('content')
-    </main>
+        <footer class="border-t border-slate-200 bg-white py-5">
+            <div class="max-w-6xl mx-auto px-6 text-sm text-slate-500">
+                Built for DSN x BCT Hackathon 3.0 · Powered by Laravel 13 + Mistral AI
+            </div>
+        </footer>
+
+        <script>
+            (function() {
+                var header = document.getElementById('app-header');
+                var subtitle = document.getElementById('app-header-subtitle');
+                var content = header.querySelector('div');
+
+                function updateHeader() {
+                    if (window.scrollY > 24) {
+                        header.classList.add('shadow-sm');
+                        content.classList.add('py-3');
+                        content.classList.remove('py-5');
+                        if (subtitle) {
+                            subtitle.classList.add('opacity-0');
+                        }
+                    } else {
+                        header.classList.remove('shadow-sm');
+                        content.classList.remove('py-3');
+                        content.classList.add('py-5');
+                        if (subtitle) {
+                            subtitle.classList.remove('opacity-0');
+                        }
+                    }
+                }
+
+                window.addEventListener('scroll', updateHeader);
+                updateHeader();
+            })();
+        </script>
+    </div>
 </body>
 </html>

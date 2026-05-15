@@ -1,51 +1,118 @@
 @extends('layouts.app')
 
+@section('title', 'Task A — User Modeling')
+
 @section('content')
-    <div class="space-y-6">
-        <section class="bg-white border border-gray-200 rounded-3xl shadow-sm p-8">
-            <div class="flex flex-col gap-4">
+    <div class="space-y-8">
+        <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700">Task A</span>
                 <div>
-                    <p class="text-sm uppercase tracking-[0.24em] text-emerald-700 font-semibold">Task A</p>
-                    <h1 class="mt-2 text-3xl font-semibold text-slate-900">User Modeling</h1>
+                    <h1 class="text-3xl font-semibold text-slate-900">User Modeling Agent</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+                        Select a Yelp persona and enter a product or business. The agent generates a review and star rating that matches the user's voice, tone, and behavior.
+                    </p>
                 </div>
-                <p class="max-w-2xl text-gray-600 text-base leading-7">
-                    Build a clean, structured user profile from the submitted input. This task is designed for capturing user preferences, interests, and identity attributes in a clear format.
-                </p>
             </div>
         </section>
 
-        <section class="grid gap-6 md:grid-cols-2">
-            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                <h2 class="text-xl font-semibold text-slate-900">What to do</h2>
-                <p class="mt-3 text-gray-600 leading-7">
-                    Provide a concise user description and let the model create a polished user profile summary with core attributes and preferences.
-                </p>
-            </div>
+        <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                <div class="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Input</p>
+                        <h2 class="mt-3 text-2xl font-semibold text-slate-900">Build a review prompt</h2>
+                    </div>
+                        <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">Yelp persona</span>
+                    <div class="space-y-2">
+                        <label for="persona" class="block text-sm font-medium text-slate-700">Select User Persona</label>
+                        <select id="persona" name="persona" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                            <option value="user_a">User A — Critical writer · Avg 2.1 stars · 47 reviews</option>
+                            <option value="user_b">User B — Enthusiastic writer · Avg 4.8 stars · 23 reviews</option>
+                            <option value="user_c">User C — Balanced reviewer · Avg 3.5 stars · 31 reviews</option>
+                            <option value="user_d">User D — Brief and direct · Avg 2.9 stars · 18 reviews</option>
+                            <option value="user_e">User E — Detailed storyteller · Avg 4.2 stars · 55 reviews</option>
+                        </select>
+                    </div>
 
-            <div class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                <h2 class="text-xl font-semibold text-slate-900">Why it matters</h2>
-                <p class="mt-3 text-gray-600 leading-7">
-                    Structured user data improves personalization, recommendation accuracy, and downstream analytics for intelligent product experiences.
-                </p>
-            </div>
-        </section>
+                    <div class="space-y-2">
+                        <label for="product" class="block text-sm font-medium text-slate-700">Product / Business to Review</label>
+                        <input id="product" name="product" type="text" placeholder="e.g. Mama Titi's Kitchen, Lagos" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100" />
+                    </div>
 
-        <section class="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-            <h2 class="text-xl font-semibold text-slate-900">Key details</h2>
-            <ul class="mt-4 space-y-3 text-gray-600">
-                <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span>Accepts user-provided text as input.</span>
-                </li>
-                <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span>Outputs simplified profile fields and preference cues.</span>
-                </li>
-                <li class="flex items-start gap-3">
-                    <span class="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-600"></span>
-                    <span>Designed for clarity, consistency, and ease of integration.</span>
-                </li>
-            </ul>
-        </section>
+                    <button type="submit" class="w-full rounded-3xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-300">
+                        Generate Review
+                    </button>
+                </form>
+            </section>
+
+            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Generated Output</p>
+                        <h2 class="mt-3 text-2xl font-semibold text-slate-900">Review result</h2>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Mistral AI</span>
+                </div>
+
+                @if($result ?? null)
+                    <div class="mt-6 space-y-5">
+                        <div class="flex flex-wrap items-center gap-3 text-sm font-semibold">
+                            @for($i = 1; $i <= 5; $i++)
+                                <span class="text-lg {{ $i <= intval($result['rating'] ?? 0) ? 'text-amber-500' : 'text-slate-300' }}">★</span>
+                            @endfor
+                            <span class="text-slate-500">{{ $result['rating'] ?? '0' }} / 5</span>
+                        </div>
+
+                        <div class="rounded-3xl border-l-4 border-slate-300 bg-slate-50 p-6">
+                            <p class="italic text-slate-700 leading-7">{{ $result['review'] ?? 'No review generated yet.' }}</p>
+                        </div>
+
+                        <p class="text-xs uppercase tracking-[0.22em] text-slate-500">Generated by Mistral AI · Behavioural simulation</p>
+                    </div>
+                @else
+                    <div class="mt-6 flex min-h-[260px] items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                        Your generated review will appear here
+                    </div>
+                @endif
+            </section>
+        </div>
+
+        @if($persona ?? null)
+            <section class="space-y-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+                <div class="flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-sm uppercase tracking-[0.3em] text-slate-500">User Persona Analyzed</p>
+                        <h2 class="mt-2 text-2xl font-semibold text-slate-900">Persona insights</h2>
+                    </div>
+                    <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Review profile</span>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-3">
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                        <p class="text-sm text-slate-500">Average Rating</p>
+                        <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $persona['avg_rating'] }}</p>
+                    </div>
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                        <p class="text-sm text-slate-500">Total Reviews</p>
+                        <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $persona['review_count'] }}</p>
+                    </div>
+                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                        <p class="text-sm text-slate-500">Writing Style</p>
+                        <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $persona['style'] }}</p>
+                    </div>
+                </div>
+
+                @if(!empty($persona['samples']))
+                    <div class="grid gap-4 md:grid-cols-3">
+                        @foreach(array_slice($persona['samples'], 0, 3) as $sample)
+                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                                {{ $sample }}
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </section>
+        @endif
     </div>
 @endsection
