@@ -123,9 +123,55 @@
                     <div class="flex min-h-[280px] items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
                         Your top recommendations will appear here after the first request.
                     </div>
+                    <div class="mt-6 space-y-4">
+                        @for($i = 0; $i < 3; $i++)
+                            <div class="flex gap-4 rounded-3xl border px-5 py-4 bg-white shadow-sm animate-pulse">
+                                <div class="h-10 w-10 rounded-full bg-slate-200"></div>
+                                <div class="flex-1 space-y-2">
+                                    <div class="h-4 bg-slate-200 rounded"></div>
+                                    <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
                 @endif
             </section>
         </div>
+
+        @if(isset($recommendations))
+            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                <h2 class="text-2xl font-semibold text-slate-900">Top 10 Recommendations for this User</h2>
+                <div class="mt-6 space-y-4">
+                    @foreach($recommendations as $index => $item)
+                        @php
+                            $rank = $index + 1;
+                            if ($rank === 1) {
+                                $circleBg = 'bg-amber-500';
+                                $borderColor = 'border-l-amber-500';
+                            } elseif ($rank === 2) {
+                                $circleBg = 'bg-gray-400';
+                                $borderColor = 'border-l-gray-400';
+                            } elseif ($rank === 3) {
+                                $circleBg = 'bg-amber-700';
+                                $borderColor = 'border-l-amber-700';
+                            } else {
+                                $circleBg = 'bg-gray-700';
+                                $borderColor = 'border-l-gray-300';
+                            }
+                        @endphp
+                        <div class="flex gap-4 rounded-3xl border-l-4 {{ $borderColor }} bg-white px-5 py-4 shadow-sm">
+                            <div class="flex h-10 w-10 items-center justify-center rounded-full {{ $circleBg }} text-white font-bold text-sm">
+                                {{ $rank }}
+                            </div>
+                            <div>
+                                <p class="text-lg font-bold text-slate-900">{{ $item['name'] ?? 'Recommendation ' . $rank }}</p>
+                                <p class="mt-2 text-sm leading-6 text-slate-600">{{ $item['reason'] ?? 'No reason provided.' }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </section>
+        @endif
 
         @if($recommendations ?? null)
             <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
@@ -133,6 +179,7 @@
                     <div>
                         <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Refinement</p>
                         <h2 class="mt-3 text-2xl font-semibold text-slate-900">Refine These Recommendations</h2>
+                        <p class="mt-2 text-sm text-slate-600">Not satisfied? Tell the agent to adjust. It remembers the full conversation.</p>
                     </div>
                     <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Multi-turn</span>
                 </div>
@@ -159,11 +206,12 @@
 
                 <form action="{{ route('task-b.refine') }}" method="POST" class="mt-6 space-y-4">
                     @csrf
+                    <input type="hidden" name="scenario" value="{{ $selectedScenario }}">
                     <div class="space-y-2">
                         <label for="refinement" class="block text-sm font-medium text-slate-700">Refinement prompt</label>
                         <input id="refinement" name="refinement" type="text" placeholder="e.g. Remove expensive options, show me Nigerian content only, something calmer" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-100" />
                     </div>
-                    <button type="submit" class="w-full rounded-3xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500">
+                    <button type="submit" class="w-full rounded-3xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-500">
                         Refine List
                     </button>
                 </form>

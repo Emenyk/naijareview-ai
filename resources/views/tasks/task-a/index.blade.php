@@ -59,9 +59,9 @@
                     <div class="mt-6 space-y-5">
                         <div class="flex flex-wrap items-center gap-3 text-sm font-semibold">
                             @for($i = 1; $i <= 5; $i++)
-                                <span class="text-lg {{ $i <= intval($result['rating'] ?? 0) ? 'text-amber-500' : 'text-slate-300' }}">★</span>
+                                <span class="text-2xl {{ $i <= intval($result['rating'] ?? 0) ? 'text-amber-500' : 'text-slate-300' }}">{{ $i <= intval($result['rating'] ?? 0) ? '★' : '☆' }}</span>
                             @endfor
-                            <span class="text-slate-500">{{ $result['rating'] ?? '0' }} / 5</span>
+                            <span class="text-slate-500 ml-2">{{ $result['rating'] ?? '0' }} out of 5</span>
                         </div>
 
                         <div class="rounded-3xl border-l-4 border-slate-300 bg-slate-50 p-6">
@@ -74,6 +74,7 @@
                     <div class="mt-6 flex min-h-[260px] items-center justify-center rounded-3xl border-2 border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
                         Your generated review will appear here
                     </div>
+                    <p class="text-xs text-slate-400 mt-2">Enter a product name and select a persona to generate a review</p>
                 @endif
             </section>
         </div>
@@ -83,31 +84,33 @@
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <p class="text-sm uppercase tracking-[0.3em] text-slate-500">User Persona Analyzed</p>
-                        <h2 class="mt-2 text-2xl font-semibold text-slate-900">Persona insights</h2>
+                        <h2 class="mt-2 text-2xl font-semibold text-slate-900">User Persona Analyzed</h2>
                     </div>
                     <span class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-700">Review profile</span>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-3">
-                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                    <div class="rounded-3xl border border-slate-200 bg-emerald-50 p-5">
                         <p class="text-sm text-slate-500">Average Rating</p>
                         <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $persona['avg_rating'] }}</p>
                     </div>
-                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                    <div class="rounded-3xl border border-slate-200 bg-emerald-50 p-5">
                         <p class="text-sm text-slate-500">Total Reviews</p>
                         <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $persona['review_count'] }}</p>
                     </div>
-                    <div class="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                    <div class="rounded-3xl border border-slate-200 bg-emerald-50 p-5">
                         <p class="text-sm text-slate-500">Writing Style</p>
                         <p class="mt-3 text-2xl font-semibold text-slate-900">{{ $persona['style'] }}</p>
                     </div>
                 </div>
 
                 @if(!empty($persona['samples']))
+                    <h4 class="text-md font-semibold text-slate-800 mb-3">Sample Reviews from this User</h4>
                     <div class="grid gap-4 md:grid-cols-3">
                         @foreach(array_slice($persona['samples'], 0, 3) as $sample)
-                            <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                                {{ $sample }}
+                            <div class="rounded-3xl border border-slate-200 bg-emerald-50 p-4">
+                                <h5 class="font-semibold text-slate-800 mb-2">Review {{ $loop->iteration }}</h5>
+                                <p class="text-slate-600 text-sm">{{ $sample }}</p>
                             </div>
                         @endforeach
                     </div>
