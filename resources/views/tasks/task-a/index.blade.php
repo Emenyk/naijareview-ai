@@ -17,7 +17,9 @@
         </section>
 
         <div class="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-            <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+           <section class="bg-white border border-slate-200 rounded-3xl shadow-sm p-8">
+                <form method="POST" action="{{ route('task-a.generate') }}">
+                @csrf
                 <div class="flex flex-wrap items-center justify-between gap-4">
                     <div>
                         <p class="text-sm uppercase tracking-[0.3em] text-slate-500">Input</p>
@@ -26,12 +28,17 @@
                         <span class="rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700">Yelp persona</span>
                     <div class="space-y-2">
                         <label for="persona" class="block text-sm font-medium text-slate-700">Select User Persona</label>
-                        <select id="persona" name="persona" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
-                            <option value="user_a">User A — Critical writer · Avg 2.1 stars · 47 reviews</option>
-                            <option value="user_b">User B — Enthusiastic writer · Avg 4.8 stars · 23 reviews</option>
-                            <option value="user_c">User C — Balanced reviewer · Avg 3.5 stars · 31 reviews</option>
-                            <option value="user_d">User D — Brief and direct · Avg 2.9 stars · 18 reviews</option>
-                            <option value="user_e">User E — Detailed storyteller · Avg 4.2 stars · 55 reviews</option>
+                        <select name="user_id" class="w-full rounded-3xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-100">
+                            @foreach($sampleUsers as $user)
+                                <option 
+                                    value="{{ $user['user_id'] }}"
+                                    {{ isset($selectedUser) && $selectedUser === $user['user_id'] ? 'selected' : '' }}
+                                >
+                                    {{ $user['personality'] ?? 'User' }} · 
+                                    Avg {{ $user['avg_rating'] }} stars · 
+                                    {{ $user['review_count'] }} reviews
+                                </option>
+                            @endforeach
                         </select>
                     </div>
 
@@ -43,6 +50,7 @@
                     <button type="submit" class="w-full rounded-3xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-300">
                         Generate Review
                     </button>
+                </div>
                 </form>
             </section>
 
@@ -108,9 +116,20 @@
                     <h4 class="text-md font-semibold text-slate-800 mb-3">Sample Reviews from this User</h4>
                     <div class="grid gap-4 md:grid-cols-3">
                         @foreach(array_slice($persona['samples'], 0, 3) as $sample)
-                            <div class="rounded-3xl border border-slate-200 bg-emerald-50 p-4">
-                                <h5 class="font-semibold text-slate-800 mb-2">Review {{ $loop->iteration }}</h5>
-                                <p class="text-slate-600 text-sm">{{ $sample }}</p>
+                            <div class="rounded-3xl border border-slate-200 bg-emerald-50 p-4 flex flex-col gap-2">
+                                <div class="flex items-center justify-between">
+                                    <h5 class="font-semibold text-slate-800">
+                                        Review {{ $loop->iteration }}
+                                    </h5>
+                                    <span class="text-amber-500 text-sm font-medium">
+                                        {{ $sample['stars'] }} ★
+                                    </span>
+                                </div>
+                                <div class="h-28 overflow-y-auto pr-1 scrollbar-thin">
+                                    <p class="text-slate-600 text-sm leading-6">
+                                        {{ $sample['text'] }}
+                                    </p>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -118,4 +137,5 @@
             </section>
         @endif
     </div>
+
 @endsection

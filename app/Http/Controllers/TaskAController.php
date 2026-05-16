@@ -3,41 +3,83 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\UserModelingAgent;
+use App\Services\DatasetService;
+use App\Services\PersonaBuilder;
 use Illuminate\Http\Request;
 
 class TaskAController extends Controller
 {
+    public function __construct(
+        private DatasetService $dataset,
+        private PersonaBuilder $persona
+    ) {}
+
+    /**
+     * Show the Task A page with sample users
+     */
     public function index()
     {
-        // for testing Ai agent integration
-        // $response = (new UserModelingAgent)
-        // ->prompt('Say hello in Nigerian Pidgin English');
-        // return view('tasks.task-a.index', ['response' => $response]);
+        $sampleUsers = $this->dataset->getSampleUsers();
 
-        return view('tasks.task-a.index');
+        return view('tasks.task-a.index', [
+            'sampleUsers' => $sampleUsers,
+            'result'      => null,
+            'persona'     => null,
+        ]);
     }
 
+    /**
+     * Handle the form submission and generate review
+     */
     public function generate(Request $request)
     {
+        // Validate input
         $request->validate([
-            'user_input' => 'required|string',
+            'user_id' => 'required|string',
+            'product' => 'required|string|max:200',
         ]);
 
-        $userInput = $request->input('user_input');
+        $userId  = $request->user_id;
+        $product = $request->product;
 
-        // Here you would typically call your AI service to generate the user model
-        // For demonstration, we'll just return a dummy response
+        // Get user reviews from dataset
+        $reviews = $this->dataset->getUserReviews($userId);
 
-        $generatedModel = [
-            'name' => 'John Doe',
-            'age' => 30,
-            'interests' => ['technology', 'sports', 'music'],
-            'preferences' => ['email_notifications' => true, 'sms_notifications' => false],
+        // Build persona from reviews
+        $persona = $this->persona->build($reviews);
+
+        // If no reviews found, return with error
+        if ($persona['review_count'] === 0) {
+            return back()->with('error', 
+                'No reviews found for this user in our dataset.'
+            );
+        }
+
+        // Create and prompt the agent
+        $agent = new UserModelingAgent(
+            personaSummary: $persona['summary'],
+            sampleReviews:  $persona['samples'],
+            product:        $product
+        );
+
+        $response = $agent->prompt(
+            "Generate a review for: {$product}"
+        );
+
+        // Get structured result
+        $result = [
+            'rating'     => $response['rating'],
+            'review'     => $response['review'],
+            'confidence' => $response['confidence'],
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $generatedModel,
+        // Return the same page with results
+        return view('tasks.task-a.index', [
+            'sampleUsers' => $this->dataset->getSampleUsers(),
+            'result'      => $result,
+            'persona'     => $persona,
+            'selectedUser'=> $userId,
+            'product'     => $product,
         ]);
     }
 }
