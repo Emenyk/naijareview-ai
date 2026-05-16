@@ -3,41 +3,52 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\UserModelingAgent;
+use App\Services\PersonaBuilder;
 use Illuminate\Http\Request;
+use Laravel\Ai\Responses\StructuredAgentResponse;
 
 class TaskAController extends Controller
 {
     public function index()
     {
-        // for testing Ai agent integration
-        // $response = (new UserModelingAgent)
-        // ->prompt('Say hello in Nigerian Pidgin English');
-        // return view('tasks.task-a.index', ['response' => $response]);
-
-        return view('tasks.task-a.index');
+        return view('tasks.task-a.index', [
+            'personas' => PersonaBuilder::forSelect(),
+        ]);
     }
 
     public function generate(Request $request)
     {
         $request->validate([
-            'user_input' => 'required|string',
+            'persona_id' => 'required|string',
+            'product'    => 'required|string|max:200',
         ]);
 
-        $userInput = $request->input('user_input');
+        $persona = PersonaBuilder::find($request->input('persona_id'));
 
-        // Here you would typically call your AI service to generate the user model
-        // For demonstration, we'll just return a dummy response
+        if (! $persona) {
+            return back()->withErrors(['persona_id' => 'Unknown persona selected.'])->withInput();
+        }
 
-        $generatedModel = [
-            'name' => 'John Doe',
-            'age' => 30,
-            'interests' => ['technology', 'sports', 'music'],
-            'preferences' => ['email_notifications' => true, 'sms_notifications' => false],
-        ];
+        $product = trim($request->input('product'));
 
-        return response()->json([
-            'success' => true,
-            'data' => $generatedModel,
+        try {
+            /** @var StructuredAgentResponse $response */
+            $response = (new UserModelingAgent($persona, $product))
+                ->prompt("Generate a review for: {$product}");
+
+            $result = $response->toArray();
+            $result['rating'] = max(1, min(5, (int) ($result['rating'] ?? 3)));
+        } catch (\Throwable $e) {
+            return back()
+                ->withErrors(['ai' => 'AI generation failed: ' . $e->getMessage()])
+                ->withInput();
+        }
+
+        return view('tasks.task-a.index', [
+            'personas' => PersonaBuilder::forSelect(),
+            'result'   => $result,
+            'persona'  => $persona,
+            'product'  => $product,
         ]);
     }
 }
