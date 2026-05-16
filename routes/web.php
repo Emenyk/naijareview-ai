@@ -11,6 +11,7 @@ Route::post('/task-a/generate', [TaskAController::class, 'generate'])->name('tas
 // Task B — Recommendation
 Route::get('/task-b', [TaskBController::class, 'index'])->name('task-b');
 Route::post('/task-b/recommend', [TaskBController::class, 'recommend'])->name('task-b.recommend');
+Route::post('/task-b/refine', [TaskBController::class, 'refine'])->name('task-b.refine');
 
 // Home — redirect to Task A
-Route::get('/', fn() => redirect()->route('task-a'));
+Route::get('/', fn () => redirect()->route('task-a'));
