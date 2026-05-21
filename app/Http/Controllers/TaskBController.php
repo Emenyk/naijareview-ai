@@ -20,12 +20,18 @@ class TaskBController extends Controller
 
     public function recommend(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'scenario'            => 'required|in:normal,cold_start,cross_domain',
             'persona_description' => 'required|string|max:1000',
             'domain'              => 'required|string|max:100',
             'location'            => 'nullable|string|max:100',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('task-b')
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         $scenario    = $request->input('scenario');
         $persona     = trim($request->input('persona_description'));
@@ -75,10 +81,16 @@ class TaskBController extends Controller
 
     public function refine(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'refinement' => 'required|string|max:500',
             'scenario'   => 'nullable|string',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('task-b')
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         $session = session(self::SESSION_KEY);
 

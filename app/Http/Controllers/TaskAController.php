@@ -18,10 +18,16 @@ class TaskAController extends Controller
 
     public function generate(Request $request)
     {
-        $request->validate([
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'persona_id' => 'required|string',
             'product'    => 'required|string|max:200',
         ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('task-a')
+                ->withErrors($validator)
+                ->withInput();
+        }
 
         $persona = PersonaBuilder::find($request->input('persona_id'));
 
