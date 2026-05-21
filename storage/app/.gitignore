@@ -2,4 +2,5 @@
 !private/
 !public/
 !data/
+!data/*
 !.gitignore
