@@ -59,6 +59,8 @@ class UserModelingAgent implements Agent, HasStructuredOutput
     {
         return [
             'rating' => $schema->integer()
+                // ->minimum(1)
+                // ->maximum(5)
                 ->description("Star rating 1–5, consistent with this user's behavioral pattern (avg {$this->persona['avg_rating']}★ ±1)")
                 ->required(),
             'review' => $schema->string()

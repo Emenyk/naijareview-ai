@@ -41,8 +41,11 @@ class RecommendationAgent implements Agent, Conversational, HasStructuredOutput
 
         Your goal is to produce deeply personalised recommendations — not generic popularity rankings.
 
-        ## Scenario Type
-        {$scenarioContext}
+        ## User Request
+        - Scenario: {$this->scenario}
+        - Domain / Category: {$this->domain}
+        - Location: {$this->location}
+        - Persona Description: {$this->personaDescription}
 
         ## Available Item Catalog
         {$this->catalogText}
@@ -60,7 +63,9 @@ class RecommendationAgent implements Agent, Conversational, HasStructuredOutput
 
         ## Output Requirements
         - Rank exactly 10 items selected from the catalog above.
-        - Every recommendation MUST include a specific, personalised `reason` that directly references this user's persona, preferences or scenario.
+        - The catalog above already reflects the requested domain and location constraints.
+        - Do NOT recommend items not present in the catalog.
+        - Every recommendation MUST include a specific, personalised `reason` that directly references this user's persona, preferences, scenario, or location.
         - Reasons must NOT be generic descriptions of the item — they must explain WHY it fits THIS user.
         - For cross-domain picks, the reason must explicitly state the cross-domain inference.
 

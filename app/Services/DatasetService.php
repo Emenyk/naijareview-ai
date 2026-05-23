@@ -4,103 +4,151 @@ namespace App\Services;
 
 class DatasetService
 {
-    private static ?array $businesses = null;
-
-    private const CROSS_DOMAIN_MAP = [
-        'restaurant'    => ['books', 'entertainment'],
-        'books'         => ['entertainment', 'restaurant'],
-        'entertainment' => ['books', 'restaurant'],
-        'electronics'   => ['books', 'entertainment'],
-        'hospitality'   => ['restaurant', 'entertainment'],
-        'health'        => ['restaurant', 'entertainment'],
-    ];
-
-    public static function all(): array
+    /**
+     * Get user reviews from real Yelp sample file
+     */
+    public static function getUserReviews(string $userId): array
     {
-        if (self::$businesses !== null) {
-            return self::$businesses;
+        $file   = storage_path('app/dataset/reviews_sample.json');
+        $handle = fopen($file, 'r');
+        $reviews = [];
+
+        while (($line = fgets($handle)) !== false) {
+            $data = json_decode(trim($line), true);
+            if (!$data) continue;
+            if ($data['user_id'] === $userId) {
+                $reviews[] = [
+                    'rating' => (int) $data['stars'],
+                    'text'   => $data['text'],
+                ];
+            }
         }
 
-        $path = storage_path('app/data/businesses.json');
-        self::$businesses = json_decode(file_get_contents($path), true);
-
-        return self::$businesses;
+        fclose($handle);
+        return $reviews;
     }
 
     /**
-     * Get businesses filtered and ranked for a recommendation request.
-     *
-     * For cold_start: return popular items across all categories.
-     * For cross_domain: include items from related categories.
-     * For normal: filter by requested domain and location.
+     * Get businesses from real Yelp dataset
+     * filtered by category and location
      */
     public static function forRecommendation(
         string $domain,
         string $location,
         string $scenario,
-        int $limit = 30
+        int    $limit = 30
     ): array {
-        $all = self::all();
-
-        $domain = strtolower(trim($domain));
+        $file     = storage_path('app/dataset/yelp_academic_dataset_business.json');
+        $handle   = fopen($file, 'r');
+        $category = self::resolveCategory($domain);
         $location = strtolower(trim($location));
+        $pool     = [];
 
+        while (($line = fgets($handle)) !== false) {
+            if (count($pool) >= $limit * 3) break;
+
+            $data = json_decode(trim($line), true);
+            if (!$data) continue;
+
+            // Match category
+            $cats = strtolower($data['categories'] ?? '');
+            if (!str_contains($cats, strtolower($category))) continue;
+
+            // For cross_domain skip location filter
+            if ($scenario !== 'cross_domain' && !empty($location)) {
+                $city = strtolower($data['city'] ?? '');
+                $state = strtolower($data['state'] ?? '');
+                if (
+                    !str_contains($city, $location) &&
+                    !str_contains($location, $city) &&
+                    !str_contains($state, $location)
+                ) continue;
+            }
+
+            $pool[] = [
+                'business_id'  => $data['business_id'],
+                'name'         => $data['name'],
+                'category'     => $data['categories'],
+                'rating'       => (float) ($data['stars'] ?? 0),
+                'review_count' => (int) ($data['review_count'] ?? 0),
+                'city'         => $data['city'] ?? '',
+                'state'        => $data['state'] ?? '',
+            ];
+        }
+
+        fclose($handle);
+
+        // If no results with location, retry without location
+        if (empty($pool) && $scenario !== 'cross_domain') {
+            return self::forRecommendation(
+                $domain, '', $scenario, $limit
+            );
+        }
+
+        // Sort by rating for cold_start, mixed for others
         if ($scenario === 'cold_start') {
-            $pool = self::filterByLocation($all, $location);
-            usort($pool, fn ($a, $b) => $b['avg_rating'] <=> $a['avg_rating']);
-
-            return array_slice($pool, 0, $limit);
-        }
-
-        $primaryCategory = self::resolvePrimaryCategory($domain);
-
-        if ($scenario === 'cross_domain') {
-            $relatedCategories = self::CROSS_DOMAIN_MAP[$primaryCategory] ?? [];
-            $allCategories = array_merge([$primaryCategory], $relatedCategories);
-            $pool = array_filter($all, fn ($b) => in_array($b['category'], $allCategories));
+            usort($pool, fn($a, $b) =>
+                $b['rating'] <=> $a['rating']
+            );
         } else {
-            $pool = array_filter($all, fn ($b) => $b['category'] === $primaryCategory);
+            shuffle($pool);
         }
-
-        $pool = self::filterByLocation(array_values($pool), $location);
-
-        if (count($pool) < 10) {
-            $remaining = array_filter($all, fn ($b) => !in_array($b, $pool));
-            $pool = array_merge($pool, array_slice(array_values($remaining), 0, $limit - count($pool)));
-        }
-
-        usort($pool, fn ($a, $b) => $b['avg_rating'] <=> $a['avg_rating']);
 
         return array_slice($pool, 0, $limit);
     }
 
-    private static function filterByLocation(array $businesses, string $location): array
-    {
-        if (empty($location) || $location === 'n/a') {
-            return $businesses;
+    /**
+     * Format businesses as readable text for LLM prompt
+     */
+    public static function formatCatalogForPrompt(
+        array $businesses
+    ): string {
+        $lines = '';
+        foreach ($businesses as $biz) {
+            $lines .= "- {$biz['name']} | " .
+                      "Category: {$biz['category']} | " .
+                      "Rating: {$biz['rating']}★ | " .
+                      "Reviews: {$biz['review_count']} | " .
+                      "Location: {$biz['city']}, {$biz['state']}\n";
         }
-
-        $local = array_filter($businesses, fn ($b) => str_contains(strtolower($b['location']), $location) || $b['location'] === 'N/A');
-        $local = array_values($local);
-
-        return count($local) >= 5 ? $local : $businesses;
+        return $lines;
     }
 
-    private static function resolvePrimaryCategory(string $domain): string
+    /**
+     * Resolve user typed domain to Yelp category keyword
+     */
+    public static function resolveCategory(string $domain): string
     {
+        $domain = strtolower(trim($domain));
+
         $map = [
-            'restaurant' => 'restaurant', 'food' => 'restaurant', 'dining' => 'restaurant',
-            'eat' => 'restaurant', 'eating' => 'restaurant', 'cuisine' => 'restaurant',
-            'book' => 'books', 'books' => 'books', 'novel' => 'books', 'reading' => 'books',
-            'literature' => 'books', 'fiction' => 'books',
-            'movie' => 'entertainment', 'movies' => 'entertainment', 'film' => 'entertainment',
-            'films' => 'entertainment', 'cinema' => 'entertainment', 'nollywood' => 'entertainment',
-            'entertainment' => 'entertainment', 'shows' => 'entertainment',
-            'electronics' => 'electronics', 'gadget' => 'electronics', 'gadgets' => 'electronics',
-            'tech' => 'electronics', 'technology' => 'electronics', 'phone' => 'electronics',
-            'hotel' => 'hospitality', 'hotels' => 'hospitality', 'stay' => 'hospitality',
-            'accommodation' => 'hospitality', 'hospitality' => 'hospitality',
-            'gym' => 'health', 'spa' => 'health', 'wellness' => 'health', 'health' => 'health',
+            'restaurant'    => 'Restaurants',
+            'food'          => 'Restaurants',
+            'dining'        => 'Restaurants',
+            'eat'           => 'Restaurants',
+            'pizza'         => 'Pizza',
+            'burger'        => 'Burgers',
+            'fast food'     => 'Fast Food',
+            'cafe'          => 'Cafes',
+            'coffee'        => 'Coffee',
+            'bar'           => 'Bars',
+            'nightlife'     => 'Nightlife',
+            'hotel'         => 'Hotels',
+            'salon'         => 'Hair Salons',
+            'hair'          => 'Hair Salons',
+            'beauty'        => 'Beauty & Spas',
+            'spa'           => 'Beauty & Spas',
+            'gym'           => 'Fitness',
+            'fitness'       => 'Fitness',
+            'hospital'      => 'Hospitals',
+            'health'        => 'Health & Medical',
+            'shop'          => 'Shopping',
+            'shopping'      => 'Shopping',
+            'supermarket'   => 'Grocery',
+            'grocery'       => 'Grocery',
+            'pharmacy'      => 'Pharmacy',
+            'bank'          => 'Banks',
+            'school'        => 'Education',
         ];
 
         foreach ($map as $keyword => $category) {
@@ -109,17 +157,32 @@ class DatasetService
             }
         }
 
-        return 'restaurant';
+        // Return the domain itself as the search term
+        return ucfirst($domain);
     }
 
-    public static function formatCatalogForPrompt(array $businesses): string
-    {
-        $lines = '';
-        foreach ($businesses as $biz) {
-            $tags = implode(', ', array_slice($biz['tags'], 0, 5));
-            $lines .= "\n- [{$biz['name']}] ({$biz['category']}, {$biz['location']}, {$biz['avg_rating']}★, {$biz['price_range']} price) — {$biz['description']} [Tags: {$tags}]";
-        }
+    /**
+     * Resolve with feedback for controller use
+     */
+    public static function resolveCategoryWithFeedback(
+        string $domain
+    ): array {
+        $resolved = self::resolveCategory($domain);
+        $wasMapped = strtolower($resolved) !== strtolower($domain);
+        return [$resolved, $wasMapped];
+    }
 
-        return $lines;
+    /**
+     * Get supported categories list
+     */
+    public static function getSupportedCategories(): array
+    {
+        return [
+            'Restaurants', 'Fast Food', 'Pizza', 'Burgers',
+            'Cafes', 'Coffee', 'Bars', 'Nightlife',
+            'Hotels', 'Hair Salons', 'Beauty & Spas',
+            'Fitness', 'Health & Medical', 'Shopping',
+            'Grocery', 'Pharmacy', 'Banks', 'Education',
+        ];
     }
 }

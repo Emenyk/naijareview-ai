@@ -40,10 +40,27 @@ class TaskBController extends Controller
 
         session()->forget(self::SESSION_KEY);
 
+        [$resolvedCategory, $wasMapped] = DatasetService::resolveCategoryWithFeedback($domain);
+        $categoryInfo = $wasMapped ? " (mapped to '{$resolvedCategory}')" : "";
+
         $businesses  = DatasetService::forRecommendation($domain, $location, $scenario);
+        
+        if (count($businesses) === 0) {
+            return redirect()->route('task-b')
+                ->withErrors(['ai' => "No items found in the '{$resolvedCategory}' category for {$location}. Supported categories: " . implode(', ', DatasetService::getSupportedCategories())])
+                ->withInput();
+        }
+
         $catalogText = DatasetService::formatCatalogForPrompt($businesses);
 
-        $userPrompt = "User Profile: {$persona}\nDomain: {$domain}\nLocation: {$location}\n\nGenerate 10 personalised recommendations for this user.";
+        $userPrompt = <<<PROMPT
+        Scenario: {$scenario}
+        Persona Description: {$persona}
+        Domain: {$domain}{$categoryInfo}
+        Location: {$location}
+
+        Generate 10 personalised recommendations for this user using only the catalog above. Each recommendation must explain why it fits the user's preferences, the requested domain, and the selected location.
+        PROMPT;
 
         try {
             /** @var StructuredAgentResponse $response */
