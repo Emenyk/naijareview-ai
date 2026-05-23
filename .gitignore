@@ -25,3 +25,7 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/storage/app/dataset/yelp_academic_dataset_review.json
+/storage/app/dataset/yelp_academic_dataset_user.json
+/storage/app/dataset/yelp_academic_dataset_business.json
+/storage/app/dataset/reviews_sample.json
