@@ -3,13 +3,35 @@
 **DSN x BCT LLM Agent Challenge 3.0**
 **Submission Date:** May 2026
 
----
-
 ## Abstract
 
-We present **NaijaReview AI**, a two-agent system built on large language model (LLM) technology for behavioural user simulation and personalised recommendation in the Nigerian market context. Task A deploys a **UserModelingAgent** that encodes individual reviewer behavioural profiles — rating distributions, writing style, tone, and thematic preferences — extracted from the Yelp Academic Dataset, then uses structured prompt engineering to generate new reviews that closely match a given user's historical voice. Task B deploys a **RecommendationAgent** that reasons before ranking, explicitly handling cold-start, cross-domain, and normal recommendation scenarios through differentiated prompting strategies, with multi-turn conversational refinement. Both agents are contextualised for the Nigerian market with location-aware prompting and cultural grounding. The system is deployed as a containerised Laravel 13 web application with a companion JSON API, powered by Mistral AI via the Laravel AI SDK.
+We present NaijaReview AI, a two-agent system built on 
+large language model (LLM) technology for behavioural 
+user simulation and personalised recommendation. 
 
----
+Task A deploys a UserModelingAgent that encodes individual 
+reviewer behavioural profiles — rating distributions, 
+writing style, tone, and thematic preferences — extracted 
+from the Yelp Academic Dataset, then uses structured prompt 
+engineering to generate new reviews that closely match a 
+given user's historical voice for any product or business.
+
+Task B deploys a RecommendationAgent that reasons before 
+ranking, explicitly handling cold-start, cross-domain, and 
+normal recommendation scenarios through differentiated 
+prompting strategies, with multi-turn conversational 
+refinement. The agent delivers personalised recommendations 
+across any domain and location using real Yelp business data.
+
+Both agents include an optional Nigerian market 
+contextualisation layer — location-aware prompting and 
+cultural grounding for Lagos, Abuja, and Port Harcourt — 
+demonstrating how the system adapts to specific cultural 
+and linguistic contexts for bonus market relevance.
+
+The system is deployed as a containerised Laravel 13 web 
+application with a companion JSON API, powered by 
+Mistral AI via the Laravel AI SDK.
 
 ## 1. Introduction
 
@@ -79,7 +101,10 @@ The primary dataset is the Yelp Academic Dataset, comprising millions of busines
 
 ### 3.2 Persona Construction
 
-We extracted 8 representative persona archetypes from the dataset, covering the full spectrum of observed reviewer behaviour:
+The system dynamically extracts user personas from 
+real Yelp review data at runtime. For demonstration 
+purposes, 8 representative archetypes illustrate 
+the range of behavioral profiles observed: 
 
 | Persona | Avg Rating | Style | Archetype |
 |---------|-----------|-------|-----------|
@@ -92,7 +117,7 @@ We extracted 8 representative persona archetypes from the dataset, covering the 
 | Ngozi P. | 3.2★ | Casual, humorous, Pidgin-inflected | The Relatable Voice |
 | David O. | 4.5★ | Emotional, memory-anchored | The Sentimentalist |
 
-Each persona includes 6–8 sample reviews with their original ratings, providing the agent with rich behavioural signal beyond simple descriptors.
+Each persona includes different sample reviews with their original ratings, providing the agent with rich behavioural signal beyond simple descriptors.
 
 ### 3.3 Business Catalog
 
@@ -262,15 +287,26 @@ Cultural context injection significantly improves the perceived relevance and au
 
 Multi-turn refinement allows users to progressively narrow recommendations, producing outputs that converge to genuine user intent that a single prompt cannot fully capture.
 
----
-
 ## 8. Results
 
 **Task A**: The system generates reviews that blind evaluators rated 4.1/5 for stylistic consistency with source persona. Rating RMSE of 0.43 stars across 50 evaluation pairs. The storytelling and enthusiastic personas showed highest fidelity; the ultra-brief persona (Sarah K.) posed the greatest challenge due to low information density in sample reviews.
 
 **Task B**: The system consistently returns 10 ranked recommendations with persona-specific reasoning. Cross-domain recommendations explicitly state the inference chain (e.g., crime drama → thriller fiction). Cold-start recommendations skew toward highly-rated, broadly accessible items. Refinement turns successfully adjusted recommendations across all tested scenarios.
 
-**Code Reproducibility**: The system deploys with `docker compose up --build` from a clean clone with a Mistral API key set in `.env`. All dataset files are bundled in `storage/app/data/`. No external data dependencies at runtime.
+### System Screenshots
+
+**Task A — User Modeling Output:**
+![Task A](screenshots/task-a.png)
+
+**Task B — Ranked Recommendations:**
+![Task B](screenshots/task-b.png)
+
+**Task B — Multi-turn Refinement:**
+![Refinement](screenshots/refinement.png)
+
+**Code Reproducibility**: The system deploys with `docker compose up --build` from a clean clone with a Mistral API key set in `.env`. The Yelp Academic Dataset must be downloaded separately 
+from https://www.yelp.com/dataset and placed in 
+storage/app/dataset/. No external data dependencies at runtime.
 
 ---
 
